@@ -22,7 +22,6 @@ rjmp	TIM0_OVF
 reset:
 sei
 sbi		DDRB, 0x04			; Set portB pin4 to output
-ldi		r17, 0xFF			; counter variable
 ; Setup Timer0
 ldi		r16, 0x00
 out		TCCR0A, r16			; Set timer to normal mode

@@ -22,19 +22,25 @@ rjmp	TIM0_OVF
 reset:
 sei
 sbi		DDRB, 0x04			; Set portB pin4 to output
-ldi		r17, 0xFF			; counter variable
 ; Setup Timer0
 ldi		r16, 0x00
 out		TCCR0A, r16			; Set timer to normal mode
 ldi		r16, 0x05
 out		TCCR0B, r16			; set CS[2:0] = 3'b101. Prescaler is 1/1024.
-ldi		r16, 0x02
-out		TIMSK0, r16			; enable timer interrupt
+;ldi		r16, 0x02
+;out		TIMSK0, r16			; enable timer interrupt
 
 mainLoop:
+in		r17, TIFR0
+ldi		r18, 0x02
+and		r17, r18
+cp		r17, r18
+breq	TIM0_OVF
 rjmp	mainLoop
 
 ; TIM0OVF interrupt handler
 TIM0_OVF:
 sbi		PINB, 0x04			; Toggle the PIN bit. Blinks the light.
+out		TIFR0, r18
+rjmp	mainLoop
 reti
