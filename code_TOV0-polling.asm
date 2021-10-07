@@ -20,27 +20,23 @@ rjmp	TIM0_OVF
 ; Reset routine follows
 .org	0x0A
 reset:
-sei
+cli
 sbi		DDRB, 0x04			; Set portB pin4 to output
 ; Setup Timer0
 ldi		r16, 0x00
 out		TCCR0A, r16			; Set timer to normal mode
 ldi		r16, 0x05
 out		TCCR0B, r16			; set CS[2:0] = 3'b101. Prescaler is 1/1024.
-;ldi		r16, 0x02
-;out		TIMSK0, r16			; enable timer interrupt
 
 mainLoop:
-in		r17, TIFR0
-ldi		r18, 0x02
-and		r17, r18
-cp		r17, r18
-breq	TIM0_OVF
+in		r17, TIFR0			; read TOV0 into r17
+ldi		r18, 0x02			; set 1st LSbit of r18
+and		r17, r18			; if TOV0 was set, r17 != 0
+brne	TIM0_OVF			; if TOV0 was set, go to TIM0_OVF. BRNE = BRNZ
 rjmp	mainLoop
 
 ; TIM0OVF interrupt handler
 TIM0_OVF:
 sbi		PINB, 0x04			; Toggle the PIN bit. Blinks the light.
-out		TIFR0, r18
-rjmp	mainLoop
-reti
+out		TIFR0, r18			; Clear interrupt
+rjmp	mainLoop			; 
