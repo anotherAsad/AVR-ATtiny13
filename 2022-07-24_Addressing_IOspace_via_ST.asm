@@ -6,7 +6,6 @@
 .equ	TIMSK0, 0x39		; {4'b0, OCIE0B, OCIE0A, TOIE0, 1'b0}
 .equ	TIFR0 , 0x38		; {5'b0, OCF0B, OCF0A, TOV0}
 .equ	GTCCR , 0x28		; {TSM, 6;b0, PSR10}
-.equ	ACSR  , 0x08		; {ACD, ACBG, ACO, ACI, ACIE, 1'b0, ACIS[1:0]}
 .equ	MCUCR , 0x35
 .equ	PINB  , 0x16
 .equ	DDRB  , 0x17
@@ -19,7 +18,7 @@ rjmp	reset
 rjmp	reset
 rjmp	TIM0_OVF
 rjmp	reset
-rjmp	ANA_COMP
+rjmp	reset
 rjmp	TIM0_COMPA
 rjmp	reset
 rjmp	reset
@@ -31,6 +30,7 @@ reset:
 	cli							; clear interrupts
 	eor		r0, r0
 	sbi		DDRB, 0x04			; Set portB pin4 to output
+	sbi		DDRB, 0x00			; Set portB pin0 to output
 	; Setup Timer0
 	ldi		r16, 0xFF
 	out		OCR0A, r16			; Set timer clear value to 127
@@ -38,11 +38,14 @@ reset:
 	out		TCCR0A, r16			; Set timer to CTC (clear timer on compare) mode.
 	ldi		r16, 0x05
 	out		TCCR0B, r16			; set CS[2:0] = 3'b101. Prescaler is 1/1024.
-	ldi		r16, 0x00
-	out		TIMSK0, r16			; disable all timer interrupts
-	ldi		r16, 0x08
-	out		ACSR, r16			; enable analog comparator interrupt @ output toggle
+	ldi		r16, 0x04
+	out		TIMSK0, r16			; enable timer output compare interrupt
 	sei							; enable interrupts
+	; ST instruction try
+	ldi		r27, 0x00			; set X_HI to 0
+	ldi		r26, 0x56			; set X_LO to OCR0A + 32 due to 32 SRAM words offset
+	ldi		r16, 0x7F			; prep OCR0A to 127
+	st		X, r16				; update OCR0A
 
 mainLoop:
 	rjmp	mainLoop
@@ -54,14 +57,5 @@ TIM0_OVF:
 
 ; TIM0_COMPA interrupt handler
 TIM0_COMPA:
-	sbic	ACSR, 0x05			; SKIP if the ACSR's 5th bit (ACO) is set
 	sbi		PINB, 0x04			; Toggle the PIN bit. Blinks the light.
-	reti						; exit interrupt
-
-; ANA_COMP interrupt handler
-ANA_COMP:
-	sbic	ACSR, 0x05			; SKIP following if the ACSR's 5th bit (ACO) is cleared
-	sbi		PORTB, 0x04			; LED = HI @ ACO = HI
-	sbis	ACSR, 0x05			; SKIP following if the ACSR's 5th bit (ACO) is set
-	cbi		PORTB, 0x04			; LED = LO @ ACO = LO
 	reti						; exit interrupt

@@ -19,7 +19,7 @@ rjmp	reset
 rjmp	reset
 rjmp	TIM0_OVF
 rjmp	reset
-rjmp	ANA_COMP
+rjmp	reset
 rjmp	TIM0_COMPA
 rjmp	reset
 rjmp	reset
@@ -38,10 +38,8 @@ reset:
 	out		TCCR0A, r16			; Set timer to CTC (clear timer on compare) mode.
 	ldi		r16, 0x05
 	out		TCCR0B, r16			; set CS[2:0] = 3'b101. Prescaler is 1/1024.
-	ldi		r16, 0x00
-	out		TIMSK0, r16			; disable all timer interrupts
-	ldi		r16, 0x08
-	out		ACSR, r16			; enable analog comparator interrupt @ output toggle
+	ldi		r16, 0x04
+	out		TIMSK0, r16			; enable timer output compare interrupt
 	sei							; enable interrupts
 
 mainLoop:
@@ -54,14 +52,6 @@ TIM0_OVF:
 
 ; TIM0_COMPA interrupt handler
 TIM0_COMPA:
-	sbic	ACSR, 0x05			; SKIP if the ACSR's 5th bit (ACO) is set
+	sbic	ACSR, 0x05			; SKIP if the ACSR's 5th bit is set
 	sbi		PINB, 0x04			; Toggle the PIN bit. Blinks the light.
-	reti						; exit interrupt
-
-; ANA_COMP interrupt handler
-ANA_COMP:
-	sbic	ACSR, 0x05			; SKIP following if the ACSR's 5th bit (ACO) is cleared
-	sbi		PORTB, 0x04			; LED = HI @ ACO = HI
-	sbis	ACSR, 0x05			; SKIP following if the ACSR's 5th bit (ACO) is set
-	cbi		PORTB, 0x04			; LED = LO @ ACO = LO
 	reti						; exit interrupt
