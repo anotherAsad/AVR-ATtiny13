@@ -1,5 +1,5 @@
 ; Address alias table for ATtiny13. All addresses are port addresses. Use load/store only
-.equ	TCCR0A, 0x25		; {COM0A[1:0], COM0B[1:0], 2'b00, WGM[1:0]}
+.equ	TCCR0A, 0x2F		; {COM0A[1:0], COM0B[1:0], 2'b00, WGM[1:0]}
 .equ	TCCR0B, 0x33		; {FOC0A, FOC0B, 2'b0, WGM[2], CS[2:0]}
 .equ	TCNT0 , 0x32		; TCNT0[7:0]
 .equ	OCR0A , 0x36		; OCR0A[7:0]
